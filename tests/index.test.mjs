@@ -19,7 +19,7 @@ const models = [
 
 describe("argument parsing", () => {
 	it("parses model and thinking level together", () => {
-		assert.deepEqual(parseArgs("anthropic/claude-sonnet-4-5 high"), {
+		assert.deepEqual(parseArgs("anthropic/claude-sonnet-4-5:high"), {
 			modelQuery: "anthropic/claude-sonnet-4-5",
 			thinkingLevel: "high",
 		});
@@ -32,6 +32,12 @@ describe("argument parsing", () => {
 	it("treats non-thinking suffixes as part of model query", () => {
 		assert.deepEqual(parseArgs("openai/gpt-5.2-codex turbo"), {
 			modelQuery: "openai/gpt-5.2-codex turbo",
+		});
+	});
+
+	it("treats invalid post-colon values as part of model query", () => {
+		assert.deepEqual(parseArgs("openai/gpt-5.2-codex:foo"), {
+			modelQuery: "openai/gpt-5.2-codex:foo",
 		});
 	});
 });
@@ -81,10 +87,18 @@ describe("argument completions", () => {
 	});
 
 	it("offers supported thinking levels after an exact provider/model", () => {
-		const completions = completionsFor("openai/gpt-5.2-codex h", models);
+		const completions = completionsFor("openai/gpt-5.2-codex:h", models);
 		assert.deepEqual(
 			completions.map((item) => item.value),
-			["openai/gpt-5.2-codex high"],
+			["openai/gpt-5.2-codex:high"],
+		);
+	});
+
+	it("offers all supported thinking levels after an exact provider/model with colon", () => {
+		const completions = completionsFor("openai/gpt-5.2-codex:", models);
+		assert.deepEqual(
+			completions.map((item) => item.value),
+			["openai/gpt-5.2-codex:off", "openai/gpt-5.2-codex:minimal", "openai/gpt-5.2-codex:low", "openai/gpt-5.2-codex:medium", "openai/gpt-5.2-codex:high"],
 		);
 	});
 });

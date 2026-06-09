@@ -42,11 +42,17 @@ export function parseArgs(args: string): { modelQuery?: string; thinkingLevel?: 
 	const trimmed = args.trim();
 	if (!trimmed) return {};
 
-	const parts = trimmed.split(/\s+/);
-	const last = parts[parts.length - 1];
-	if (last && isThinkingLevel(last)) {
-		const modelQuery = parts.slice(0, -1).join(" ").trim();
-		return modelQuery ? { modelQuery, thinkingLevel: last } : { thinkingLevel: last };
+	const colonIndex = trimmed.lastIndexOf(":");
+	if (colonIndex > 0) {
+		const modelQuery = trimmed.slice(0, colonIndex).trim();
+		const afterColon = trimmed.slice(colonIndex + 1).trim();
+		if (afterColon && isThinkingLevel(afterColon)) {
+			return modelQuery ? { modelQuery, thinkingLevel: afterColon } : { thinkingLevel: afterColon };
+		}
+	}
+
+	if (isThinkingLevel(trimmed)) {
+		return { thinkingLevel: trimmed };
 	}
 
 	return { modelQuery: trimmed };
@@ -125,7 +131,7 @@ function usage(current?: string): string {
 		"Usage:",
 		"  /session-model",
 		"  /session-model <provider>/<model>",
-		"  /session-model <provider>/<model> <off|minimal|low|medium|high|xhigh>",
+		"  /session-model <provider>/<model>:<off|minimal|low|medium|high|xhigh>",
 		"  /session-model <off|minimal|low|medium|high|xhigh>",
 		current ? `\nCurrent: ${current}` : undefined,
 	]
@@ -195,17 +201,19 @@ export function thinkingCompletionsFor(model: PiModel, partial = "") {
 	return supportedThinkingLevels(model)
 		.filter((level) => level.startsWith(partial.toLowerCase()))
 		.map((level) => ({
-			value: `${modelRef(model)} ${level}`,
+			value: `${modelRef(model)}:${level}`,
 			label: level,
 			description: `Use ${modelRef(model)} with thinking:${level}`,
 		}));
 }
 
 export function completionsFor(prefix: string, models: PiModel[]) {
-	const secondToken = prefix.match(/^(.+?)\s+(\S*)$/);
-	if (secondToken) {
-		const model = findByProviderRef(models, secondToken[1]);
-		if (model) return thinkingCompletionsFor(model, secondToken[2]);
+	const colonIndex = prefix.lastIndexOf(":");
+	if (colonIndex > 0) {
+		const beforeColon = prefix.slice(0, colonIndex).trim();
+		const afterColon = prefix.slice(colonIndex + 1).trim();
+		const model = findByProviderRef(models, beforeColon);
+		if (model) return thinkingCompletionsFor(model, afterColon);
 	}
 
 	const parsed = parseArgs(prefix);

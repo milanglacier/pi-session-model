@@ -37,7 +37,7 @@ Switch model only, preserving/clamping the current thinking level as pi normally
 Switch model and thinking level together:
 
 ```text
-/session-model anthropic/claude-sonnet-4-5 high
+/session-model anthropic/claude-sonnet-4-5:high
 ```
 
 Change only the current session thinking level:
