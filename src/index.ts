@@ -1,8 +1,8 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
-type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
+export type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
 
-type PiModel = {
+export type PiModel = {
 	provider: string;
 	id: string;
 	name?: string;
@@ -10,35 +10,35 @@ type PiModel = {
 	thinkingLevelMap?: Partial<Record<ThinkingLevel, string | null>>;
 };
 
-type ResolveResult =
+export type ResolveResult =
 	| { ok: true; model: PiModel }
 	| { ok: false; reason: "not-found" | "ambiguous"; matches?: PiModel[] };
 
-const THINKING_LEVELS: ThinkingLevel[] = ["off", "minimal", "low", "medium", "high", "xhigh"];
+export const THINKING_LEVELS: ThinkingLevel[] = ["off", "minimal", "low", "medium", "high", "xhigh"];
 
-function isThinkingLevel(value: string): value is ThinkingLevel {
+export function isThinkingLevel(value: string): value is ThinkingLevel {
 	return (THINKING_LEVELS as readonly string[]).includes(value);
 }
 
-function modelRef(model: PiModel): string {
+export function modelRef(model: PiModel): string {
 	return `${model.provider}/${model.id}`;
 }
 
-function modelLabel(model: PiModel): string {
+export function modelLabel(model: PiModel): string {
 	return model.name && model.name !== model.id ? `${modelRef(model)} (${model.name})` : modelRef(model);
 }
 
-function modelSupportsThinkingLevel(model: PiModel, level: ThinkingLevel): boolean {
+export function modelSupportsThinkingLevel(model: PiModel, level: ThinkingLevel): boolean {
 	if (model.thinkingLevelMap?.[level] === null) return false;
 	if (!model.reasoning) return level === "off";
 	return true;
 }
 
-function supportedThinkingLevels(model: PiModel): ThinkingLevel[] {
+export function supportedThinkingLevels(model: PiModel): ThinkingLevel[] {
 	return THINKING_LEVELS.filter((level) => modelSupportsThinkingLevel(model, level));
 }
 
-function parseArgs(args: string): { modelQuery?: string; thinkingLevel?: ThinkingLevel } {
+export function parseArgs(args: string): { modelQuery?: string; thinkingLevel?: ThinkingLevel } {
 	const trimmed = args.trim();
 	if (!trimmed) return {};
 
@@ -46,13 +46,13 @@ function parseArgs(args: string): { modelQuery?: string; thinkingLevel?: Thinkin
 	const last = parts[parts.length - 1];
 	if (last && isThinkingLevel(last)) {
 		const modelQuery = parts.slice(0, -1).join(" ").trim();
-		return { modelQuery: modelQuery || undefined, thinkingLevel: last };
+		return modelQuery ? { modelQuery, thinkingLevel: last } : { thinkingLevel: last };
 	}
 
 	return { modelQuery: trimmed };
 }
 
-function findByProviderRef(models: PiModel[], query: string): PiModel | undefined {
+export function findByProviderRef(models: PiModel[], query: string): PiModel | undefined {
 	const slash = query.indexOf("/");
 	if (slash <= 0) return undefined;
 
@@ -61,7 +61,7 @@ function findByProviderRef(models: PiModel[], query: string): PiModel | undefine
 	return models.find((model) => model.provider === provider && model.id === id);
 }
 
-function rankMatches(models: PiModel[], query: string): PiModel[] {
+export function rankMatches(models: PiModel[], query: string): PiModel[] {
 	const needle = query.toLowerCase();
 	const searchable = (model: PiModel) => [modelRef(model), model.id, model.name ?? ""];
 
@@ -74,7 +74,7 @@ function rankMatches(models: PiModel[], query: string): PiModel[] {
 	return models.filter((model) => searchable(model).some((value) => value.toLowerCase().includes(needle)));
 }
 
-function resolveModel(ctx: ExtensionContext, models: PiModel[], query: string): ResolveResult {
+export function resolveModel(ctx: ExtensionContext, models: PiModel[], query: string): ResolveResult {
 	const providerRefMatch = findByProviderRef(models, query);
 	if (providerRefMatch) return { ok: true, model: providerRefMatch };
 
@@ -191,7 +191,7 @@ async function showSelector(pi: ExtensionAPI, ctx: ExtensionContext, models: PiM
 	await applySelection(pi, ctx, selection.model, selection.thinkingLevel);
 }
 
-function thinkingCompletionsFor(model: PiModel, partial = "") {
+export function thinkingCompletionsFor(model: PiModel, partial = "") {
 	return supportedThinkingLevels(model)
 		.filter((level) => level.startsWith(partial.toLowerCase()))
 		.map((level) => ({
@@ -201,7 +201,7 @@ function thinkingCompletionsFor(model: PiModel, partial = "") {
 		}));
 }
 
-function completionsFor(prefix: string, models: PiModel[]) {
+export function completionsFor(prefix: string, models: PiModel[]) {
 	const secondToken = prefix.match(/^(.+?)\s+(\S*)$/);
 	if (secondToken) {
 		const model = findByProviderRef(models, secondToken[1]);

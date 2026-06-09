@@ -60,6 +60,14 @@ Show the current runtime selection:
 - The picker only shows thinking levels supported by each model.
 - If credentials are missing for a selected model, pi refuses the switch and the package does not change global settings.
 
+## Development
+
+```bash
+npm run typecheck
+npm test
+npm run check
+```
+
 ## Package manifest
 
 This package declares the extension in `package.json`:
