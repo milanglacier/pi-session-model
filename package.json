@@ -1,0 +1,34 @@
+{
+  "name": "pi-session-model",
+  "version": "0.1.0",
+  "description": "A pi extension package that adds /session-model for per-session model and thinking-level switching.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-extension",
+    "model-switcher",
+    "coding-agent"
+  ],
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  },
+  "scripts": {
+    "check": "tsc --noEmit",
+    "pack:dry-run": "npm pack --dry-run"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  }
+}
