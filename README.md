@@ -2,7 +2,7 @@
 
 A standard [pi](https://pi.dev) package that adds a `/session-model` slash command.
 
-`/session-model` switches the active model and thinking level for the **current pi session only**. It uses pi's runtime APIs (`pi.setModel()` and `pi.setThinkingLevel()`) and does **not** write to `~/.pi/agent/settings.json` or any other global config file.
+`/session-model` switches the active model and optional thinking level for the **current pi session only**. It does not leave changes in `~/.pi/agent/settings.json` or other global defaults.
 
 ## Install
 
@@ -17,12 +17,12 @@ For local development:
 ```bash
 pi install /absolute/path/to/pi-session-model
 # or try it for one run
-pi -e /absolute/path/to/pi-session-model
+pi -e /absolute/path/to/pi-session-model/src/index.ts
 ```
 
 ## Usage
 
-Open an interactive model + thinking-level picker:
+Open a model picker:
 
 ```text
 /session-model
@@ -40,31 +40,19 @@ Switch model and thinking level together:
 /session-model anthropic/claude-sonnet-4-5:high
 ```
 
-Change only the current session thinking level:
+Supported thinking levels are `off`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
 
-```text
-/session-model off
-/session-model medium
-/session-model xhigh
-```
-
-Show the current runtime selection:
-
-```text
-/session-model current
-```
+Argument completion suggests providers and `provider/model` references. It intentionally does not complete thinking levels.
 
 ## Notes
 
-- Model names are resolved from pi's model registry, including custom models.
-- The picker only shows thinking levels supported by each model.
-- If credentials are missing for a selected model, pi refuses the switch and the package does not change global settings.
+- Model references are resolved from pi's model registry, including custom models.
+- If credentials are missing for a selected model, pi refuses the switch.
+- The package uses pi's runtime model/thinking APIs and restores global default model/thinking settings on pi versions where those APIs persist defaults.
 
 ## Development
 
 ```bash
-npm run typecheck
-npm test
 npm run check
 ```
 
