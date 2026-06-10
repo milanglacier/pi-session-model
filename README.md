@@ -12,6 +12,12 @@ From npm after publishing:
 pi install npm:pi-session-model
 ```
 
+Or install via github
+
+```bash
+pi install github:milanglacier/pi-session-model
+```
+
 For local development:
 
 ```bash
@@ -42,7 +48,7 @@ Switch model and thinking level together:
 
 Supported thinking levels are `off`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
 
-Argument completion suggests providers and `provider/model` references. It intentionally does not complete thinking levels.
+Argument completion suggests providers and `provider/model` references.
 
 ## Notes
 
