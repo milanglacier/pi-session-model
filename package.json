@@ -4,6 +4,7 @@
   "description": "A pi extension package that adds /session-model for per-session model and thinking-level switching.",
   "type": "module",
   "license": "MIT",
+  "author": "Milan Glacier",
   "keywords": [
     "pi-package",
     "pi",
@@ -13,9 +14,14 @@
   ],
   "files": [
     "src",
+    "types",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "*"
   },
