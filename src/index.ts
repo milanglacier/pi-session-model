@@ -1,7 +1,4 @@
-import { existsSync } from "node:fs";
-import { readFile, unlink, writeFile } from "node:fs/promises";
-import { join } from "node:path";
-import { getAgentDir, SettingsManager, type ExtensionAPI, type ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
+import { SettingsManager, type ExtensionAPI, type ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 
 type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
 
@@ -126,90 +123,7 @@ export function getSessionModelCompletions(prefix: string, models: PiModel[]): A
 	return items.length > 0 ? items : null;
 }
 
-type SettingsSnapshot = {
-	exists: boolean;
-	content?: string;
-	parsed?: Record<string, unknown>;
-};
-
-function parseObjectJson(content: string | undefined): Record<string, unknown> | undefined {
-	if (content === undefined) return undefined;
-	try {
-		const parsed = JSON.parse(content) as unknown;
-		return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : undefined;
-	} catch {
-		return undefined;
-	}
-}
-
-async function readSettingsSnapshot(settingsPath: string): Promise<SettingsSnapshot> {
-	if (!existsSync(settingsPath)) return { exists: false };
-	const content = await readFile(settingsPath, "utf8");
-	return { exists: true, content, parsed: parseObjectJson(content) };
-}
-
-const SESSION_SELECTION_SETTING_KEYS = ["defaultProvider", "defaultModel", "defaultThinkingLevel"] as const;
-
-function withoutSessionSelectionFields(settings: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
-	if (settings === undefined) return undefined;
-	const copy = { ...settings };
-	for (const key of SESSION_SELECTION_SETTING_KEYS) {
-		delete copy[key];
-	}
-	return copy;
-}
-
-function jsonEqual(a: unknown, b: unknown): boolean {
-	return JSON.stringify(a) === JSON.stringify(b);
-}
-
-async function restoreSessionSelectionSettings(settingsPath: string, before: SettingsSnapshot): Promise<void> {
-	const after = await readSettingsSnapshot(settingsPath);
-	if (!after.exists) return;
-
-	// If pi only changed session-selection defaults, restore the exact original bytes.
-	if (
-		before.exists &&
-		before.parsed !== undefined &&
-		after.parsed !== undefined &&
-		jsonEqual(withoutSessionSelectionFields(before.parsed), withoutSessionSelectionFields(after.parsed))
-	) {
-		if (after.content !== before.content) {
-			await writeFile(settingsPath, before.content ?? "", "utf8");
-		}
-		return;
-	}
-
-	// Otherwise preserve any concurrent settings edits and only roll back selection defaults.
-	if (after.parsed !== undefined) {
-		const restored = { ...after.parsed };
-		for (const key of SESSION_SELECTION_SETTING_KEYS) {
-			if (before.parsed && Object.prototype.hasOwnProperty.call(before.parsed, key)) {
-				restored[key] = before.parsed[key];
-			} else {
-				delete restored[key];
-			}
-		}
-
-		if (!before.exists && Object.keys(restored).length === 0) {
-			await unlink(settingsPath).catch(() => undefined);
-		} else {
-			await writeFile(settingsPath, `${JSON.stringify(restored, null, 2)}\n`, "utf8");
-		}
-		return;
-	}
-
-	// Last resort for malformed JSON: put the pre-command file back exactly.
-	if (before.exists) {
-		await writeFile(settingsPath, before.content ?? "", "utf8");
-	} else {
-		await unlink(settingsPath).catch(() => undefined);
-	}
-}
-
 async function withRestoredGlobalSelectionSettings<T>(fn: () => Promise<T> | T): Promise<T> {
-	const settingsPath = join(getAgentDir(), "settings.json");
-	const before = await readSettingsSnapshot(settingsPath);
 	const settingsPrototype = SettingsManager.prototype as unknown as Record<string, unknown>;
 	const methodNames = [
 		"setDefaultModelAndProvider",
@@ -234,11 +148,6 @@ async function withRestoredGlobalSelectionSettings<T>(fn: () => Promise<T> | T):
 		for (const [name, original] of originals) {
 			settingsPrototype[name] = original;
 		}
-
-		// Defense in depth: if a pi version wrote before/around the prototype patch, give
-		// queued writes a turn to land and then restore only selection-related defaults.
-		await new Promise((resolve) => setTimeout(resolve, 0));
-		await restoreSessionSelectionSettings(settingsPath, before);
 	}
 }
 
