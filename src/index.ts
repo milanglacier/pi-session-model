@@ -21,10 +21,6 @@ function modelRef(model: Model): string {
 	return `${model.provider}/${model.id}`;
 }
 
-function modelLabel(model: Model): string {
-	return model.name && model.name !== model.id ? `${model.provider}/${model.id} — ${model.name}` : modelRef(model);
-}
-
 function getAllModels(ctx: ExtensionCommandContext): Model[] {
 	ctx.modelRegistry.refresh?.();
 	return ctx.modelRegistry.getAll?.() ?? [];
@@ -177,21 +173,6 @@ async function applySessionModel(pi: ExtensionAPI, ctx: ExtensionCommandContext,
 	ctx.ui.notify(`Session model: ${modelRef(parsed.model)}${thinkingText}`, "info");
 }
 
-async function showSessionModelPicker(pi: ExtensionAPI, ctx: ExtensionCommandContext): Promise<void> {
-	if (!ctx.hasUI) {
-		ctx.ui.notify("Usage: /session-model <provider>/<model>[:thinking-level]", "info");
-		return;
-	}
-
-	const models = getAllModels(ctx);
-	const choices = models.map(modelLabel);
-	const selected = await ctx.ui.select("Select session model", choices);
-	if (!selected) return;
-
-	const ref = selected.split(" — ")[0] ?? selected;
-	await applySessionModel(pi, ctx, ref);
-}
-
 export default function sessionModelExtension(pi: ExtensionAPI) {
 	let cachedModels: Model[] = [];
 
@@ -206,7 +187,7 @@ export default function sessionModelExtension(pi: ExtensionAPI) {
 			cachedModels = getAllModels(ctx);
 			const trimmed = args.trim();
 			if (!trimmed) {
-				await showSessionModelPicker(pi, ctx);
+				ctx.ui.notify("Please provide a model, e.g. /session-model openai/gpt-4o", "warn");
 				return;
 			}
 
