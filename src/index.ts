@@ -1,17 +1,12 @@
-import { SettingsManager, type ExtensionAPI, type ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
+import { SettingsManager, type ExtensionAPI, type ExtensionCommandContext, type ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
 
-type PiModel = {
-	id: string;
-	name?: string;
-	provider: string;
-	reasoning?: boolean;
-};
+type Model = NonNullable<ExtensionContext["model"]>;
 
 type AutocompleteItem = {
 	value: string;
-	label?: string;
+	label: string;
 	description?: string;
 };
 
@@ -22,20 +17,20 @@ function isThinkingLevel(value: string): value is ThinkingLevel {
 	return THINKING_LEVEL_SET.has(value);
 }
 
-function modelRef(model: PiModel): string {
+function modelRef(model: Model): string {
 	return `${model.provider}/${model.id}`;
 }
 
-function modelLabel(model: PiModel): string {
+function modelLabel(model: Model): string {
 	return model.name && model.name !== model.id ? `${model.provider}/${model.id} — ${model.name}` : modelRef(model);
 }
 
-function getAllModels(ctx: ExtensionCommandContext): PiModel[] {
+function getAllModels(ctx: ExtensionCommandContext): Model[] {
 	ctx.modelRegistry.refresh?.();
-	return (ctx.modelRegistry.getAll?.() ?? []) as PiModel[];
+	return ctx.modelRegistry.getAll?.() ?? [];
 }
 
-function findExactModelReference(reference: string, models: PiModel[]): PiModel | undefined {
+function findExactModelReference(reference: string, models: Model[]): Model | undefined {
 	const trimmed = reference.trim();
 	if (!trimmed) return undefined;
 
@@ -51,10 +46,10 @@ function findExactModelReference(reference: string, models: PiModel[]): PiModel 
 }
 
 export type ParsedSessionModelArgument =
-	| { ok: true; model: PiModel; thinkingLevel?: ThinkingLevel }
+	| { ok: true; model: Model; thinkingLevel?: ThinkingLevel }
 	| { ok: false; error: string };
 
-export function parseSessionModelArgument(input: string, models: PiModel[]): ParsedSessionModelArgument {
+export function parseSessionModelArgument(input: string, models: Model[]): ParsedSessionModelArgument {
 	const arg = input.trim();
 	if (!arg) {
 		return { ok: false, error: "Usage: /session-model <provider>/<model>[:thinking-level]" };
@@ -87,7 +82,7 @@ export function parseSessionModelArgument(input: string, models: PiModel[]): Par
 	return { ok: false, error: `Model not found: ${arg}` };
 }
 
-export function getSessionModelCompletions(prefix: string, models: PiModel[]): AutocompleteItem[] | null {
+export function getSessionModelCompletions(prefix: string, models: Model[]): AutocompleteItem[] | null {
 	const arg = prefix.trimStart();
 
 	// Deliberately do not complete thinking levels after ':'.
@@ -161,7 +156,7 @@ async function applySessionModel(pi: ExtensionAPI, ctx: ExtensionCommandContext,
 
 	const previousThinking = pi.getThinkingLevel();
 	const success = await withRestoredGlobalSelectionSettings(async () => {
-		const modelSelected = await pi.setModel(parsed.model as never);
+		const modelSelected = await pi.setModel(parsed.model);
 		if (modelSelected && parsed.thinkingLevel) {
 			pi.setThinkingLevel(parsed.thinkingLevel);
 		}
@@ -198,7 +193,7 @@ async function showSessionModelPicker(pi: ExtensionAPI, ctx: ExtensionCommandCon
 }
 
 export default function sessionModelExtension(pi: ExtensionAPI) {
-	let cachedModels: PiModel[] = [];
+	let cachedModels: Model[] = [];
 
 	pi.on("session_start", (_event, ctx) => {
 		cachedModels = getAllModels(ctx as ExtensionCommandContext);
