@@ -36,14 +36,27 @@ test("rejects invalid thinking level when model part exists", () => {
   assert.match(result.error, /Invalid thinking level/);
 });
 
-test("completes providers before slash", () => {
-  const completions = getSessionModelCompletions("ant", models);
-  assert.deepEqual(completions?.map((item) => item.value), ["anthropic/"]);
+test("completes directly from provider name", () => {
+  const completions = getSessionModelCompletions("anthropic", models);
+  assert.deepEqual(completions?.map((item) => item.value), [
+    "anthropic/claude-opus-4-5",
+    "anthropic/claude-sonnet-4-5",
+  ]);
+  assert.deepEqual(completions?.map((item) => item.label), ["claude-opus-4-5", "claude-sonnet-4-5"]);
+  assert.deepEqual(completions?.map((item) => item.description), ["anthropic", "anthropic"]);
 });
 
-test("completes models after provider slash", () => {
-  const completions = getSessionModelCompletions("anthropic/claude-s", models);
-  assert.deepEqual(completions?.map((item) => item.value), ["anthropic/claude-sonnet-4-5"]);
+test("completes directly from model id", () => {
+  const completions = getSessionModelCompletions("claude-s", models);
+  assert.deepEqual(completions?.map((item) => item.value), [
+    "anthropic/claude-sonnet-4-5",
+    "anthropic/claude-opus-4-5",
+  ]);
+});
+
+test("completes from combined model and provider tokens", () => {
+  const completions = getSessionModelCompletions("opus anthropic", models);
+  assert.deepEqual(completions?.map((item) => item.value), ["anthropic/claude-opus-4-5"]);
 });
 
 test("does not complete thinking levels", () => {
