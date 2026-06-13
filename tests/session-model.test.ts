@@ -2,12 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { getSessionModelCompletions, parseSessionModelArgument } from "../src/index.ts";
 
+// Test fixtures don't need the full Model type from pi-ai — only the fields
+// consumed by parseSessionModelArgument / getSessionModelCompletions.
 const models = [
   { provider: "anthropic", id: "claude-sonnet-4-5", name: "Claude Sonnet 4.5", reasoning: true },
   { provider: "anthropic", id: "claude-opus-4-5", name: "Claude Opus 4.5", reasoning: true },
   { provider: "openai", id: "gpt-5.2-codex", name: "GPT 5.2 Codex", reasoning: true },
   { provider: "openrouter", id: "vendor/model:exacto", name: "Colon Model", reasoning: false },
-];
+] as any;
 
 test("parses provider/model", () => {
   const result = parseSessionModelArgument("anthropic/claude-sonnet-4-5", models);
