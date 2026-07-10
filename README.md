@@ -46,7 +46,7 @@ Switch model and thinking level together:
 /session-model anthropic/claude-sonnet-4-5:high
 ```
 
-Supported thinking levels are `off`, `minimal`, `low`, `medium`, `high`, and `xhigh`.
+Supported thinking levels are `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, and `max`.
 
 Argument completion suggests providers and `provider/model` references.
 

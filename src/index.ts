@@ -1,6 +1,7 @@
 import { SettingsManager, type ExtensionAPI, type ExtensionCommandContext, type ExtensionContext } from "@earendil-works/pi-coding-agent";
 
-type ThinkingLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
+const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
+type ThinkingLevel = (typeof THINKING_LEVELS)[number];
 
 type Model = NonNullable<ExtensionContext["model"]>;
 
@@ -10,7 +11,6 @@ type AutocompleteItem = {
 	description?: string;
 };
 
-const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh"] as const;
 const THINKING_LEVEL_SET = new Set<string>(THINKING_LEVELS);
 
 function isThinkingLevel(value: string): value is ThinkingLevel {

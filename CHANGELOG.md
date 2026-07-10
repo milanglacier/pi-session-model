@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2 - 2026-07-10
+
+- Supports Pi's `max` thinking/reasoning level in `/session-model <provider>/<model>:max`.
+
 ## 0.1.0
 
 - Initial release.

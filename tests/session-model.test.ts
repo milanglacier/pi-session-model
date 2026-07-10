@@ -25,6 +25,12 @@ test("parses provider/model:thinking-level", () => {
   assert.equal(result.thinkingLevel, "high");
 });
 
+test("parses max thinking level", () => {
+  const result = parseSessionModelArgument("anthropic/claude-sonnet-4-5:max", models);
+  assert.equal(result.ok, true);
+  assert.equal(result.thinkingLevel, "max");
+});
+
 test("keeps colons that are part of exact model ids", () => {
   const result = parseSessionModelArgument("openrouter/vendor/model:exacto", models);
   assert.equal(result.ok, true);
