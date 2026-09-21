@@ -1,15 +1,19 @@
-import { SettingsManager, type ExtensionAPI, type ExtensionCommandContext, type ExtensionContext } from "@earendil-works/pi-coding-agent";
+import {
+	SettingsManager,
+	type ExtensionAPI,
+	type ExtensionCommandContext,
+	type ExtensionContext,
+	type RegisteredCommand,
+} from "@earendil-works/pi-coding-agent";
 
 const THINKING_LEVELS = ["off", "minimal", "low", "medium", "high", "xhigh", "max"] as const;
 type ThinkingLevel = (typeof THINKING_LEVELS)[number];
 
-type Model = NonNullable<ExtensionContext["model"]>;
-
-type AutocompleteItem = {
-	value: string;
-	label: string;
-	description?: string;
-};
+export type SessionModel = NonNullable<ExtensionContext["model"]>;
+type Model = SessionModel;
+type ArgumentCompletions = NonNullable<RegisteredCommand["getArgumentCompletions"]>;
+type AutocompleteResult = Awaited<ReturnType<ArgumentCompletions>>;
+type AutocompleteItem = NonNullable<AutocompleteResult>[number];
 
 const THINKING_LEVEL_SET = new Set<string>(THINKING_LEVELS);
 
